@@ -35,6 +35,7 @@
 #include <linux/memcontrol.h>
 #include <linux/cleancache.h>
 #include <linux/rmap.h>
+#include <linux/hot_tracking.h>
 #include "internal.h"
 
 #define CREATE_TRACE_POINTS
@@ -1558,6 +1559,10 @@ page_ok:
 			mark_page_accessed(page);
 		prev_index = index;
 
+		/* Hot tracking */
+		hot_freqs_update(inode, page->index << PAGE_CACHE_SHIFT,
+				PAGE_CACHE_SIZE, 0);
+
 		/*
 		 * Ok, we have the page, and it's up-to-date, so
 		 * now we can copy it to user space...
@@ -1759,9 +1764,13 @@ static int page_cache_read(struct file *file, pgoff_t offset)
 			return -ENOMEM;
 
 		ret = add_to_page_cache_lru(page, mapping, offset, GFP_KERNEL);
-		if (ret == 0)
+		if (ret == 0) {
+			/* Hot tracking */
+			hot_freqs_update(mapping->host,
+					page->index << PAGE_CACHE_SHIFT,
+					PAGE_CACHE_SIZE, 0);
 			ret = mapping->a_ops->readpage(file, page);
-		else if (ret == -EEXIST)
+		} else if (ret == -EEXIST)
 			ret = 0; /* losing race to add is OK */
 
 		page_cache_release(page);
@@ -1968,6 +1977,11 @@ page_not_uptodate:
 	 * and we need to check for errors.
 	 */
 	ClearPageError(page);
+
+	/* Hot tracking */
+	hot_freqs_update(inode, page->index << PAGE_CACHE_SHIFT,
+			PAGE_CACHE_SIZE, 0);
+
 	error = mapping->a_ops->readpage(file, page);
 	if (!error) {
 		wait_on_page_locked(page);
@@ -2412,6 +2426,9 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from, loff_t pos)
 	}
 
 	if (written > 0) {
+		/* Hot tracking */
+		hot_freqs_update(inode, pos, written, 1);
+
 		pos += written;
 		iov_iter_advance(from, written);
 		if (pos > i_size_read(inode) && !S_ISBLK(inode->i_mode)) {
@@ -2532,6 +2549,8 @@ again:
 		}
 	} while (iov_iter_count(i));
 
+	hot_freqs_update(file_inode(file), pos, written, 1);
+	
 	return written ? written : status;
 }
 EXPORT_SYMBOL(generic_perform_write);

@@ -17,6 +17,7 @@
 #include <linux/pagemap.h>
 #include <linux/syscalls.h>
 #include <linux/file.h>
+#include <linux/hot_tracking.h>
 
 #include "internal.h"
 
@@ -114,6 +115,11 @@ static int read_pages(struct address_space *mapping, struct file *filp,
 	struct blk_plug plug;
 	unsigned page_idx;
 	int ret;
+
+	/* Hot tracking */
+	hot_freqs_update(mapping->host,
+			list_to_page(pages)->index << PAGE_CACHE_SHIFT,
+			(size_t)nr_pages * PAGE_CACHE_SIZE, 0);
 
 	blk_start_plug(&plug);
 
