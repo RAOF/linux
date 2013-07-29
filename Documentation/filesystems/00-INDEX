@@ -157,3 +157,5 @@ xfs-self-describing-metadata.txt
 	- info on XFS Self Describing Metadata.
 xfs.txt
 	- info and mount options for the XFS filesystem.
+hot_tracking.txt
+	- info on hot tracking in VFS layer
