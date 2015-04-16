@@ -715,7 +715,7 @@ static struct hot_info *hot_tree_init(struct super_block *sb)
 	}
 
 	root->update_wq = alloc_workqueue(
-			"hot_update_wq", WQ_NON_REENTRANT, 0);
+			"hot_update_wq", 0, 0);
 	if (!root->update_wq) {
 		printk(KERN_ERR "%s: Failed to create "
 				"hot update workqueue\n", __func__);
