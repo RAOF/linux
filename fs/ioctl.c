@@ -562,6 +562,12 @@ static int ioctl_heat_info(struct file *file, void __user *argp)
 	struct hot_inode_item *he;
 	int ret = 0;
 
+	if (!(inode->i_sb->s_flags & MS_HOTTRACK))
+	{
+		ret = -EOPNOTSUPP;
+		goto err;
+	}
+
 	/* The 'live' field need to be read from the user space */
 	if (copy_from_user((void *)&heat_info,
 			argp,
