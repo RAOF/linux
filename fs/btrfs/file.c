@@ -17,6 +17,7 @@
  */
 
 #include <linux/fs.h>
+#include <linux/hot_tracking.h>
 #include <linux/pagemap.h>
 #include <linux/highmem.h>
 #include <linux/time.h>
@@ -1820,6 +1821,8 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
 		err = generic_write_sync(file, pos, num_written);
 		if (err < 0)
 			num_written = err;
+		else
+			hot_freqs_update(inode, start_pos, num_written, 1);
 	}
 
 	if (sync)
