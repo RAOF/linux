@@ -1,0 +1,11 @@
+config DRM_CHAOS_MONKEY
+	tristate "Chaos Monkey"
+	depends on DRM
+	depends on m
+	select DRM_KMS_HELPER
+        select DRM_KMS_FB_HELPER
+	help
+	  This is a KMS driver for use in testing DRM clients.
+	  It provides a fake DRM device supporting KMS, with fake resources
+	  and allows stress-testing client hotplug support.
+          Say M to add support for this testing driver. If unsure, say N.
